@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Hangfire.Core" Version="1.7.7" />
+    <PackageReference Include="protobuf-net" Version="2.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Raet.UM.HAS.Core.Application\Raet.UM.HAS.Core.Application.csproj" />
+    <ProjectReference Include="..\Infrastructure\Raet.UM.HAS.Infrastructure.Storage.BLOB\Raet.UM.HAS.Infrastructure.Storage.BLOB.csproj" />
+  </ItemGroup>
+
+</Project>

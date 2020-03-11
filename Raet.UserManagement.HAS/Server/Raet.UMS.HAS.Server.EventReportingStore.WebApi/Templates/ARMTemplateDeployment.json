@@ -1,0 +1,503 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "env": {
+      "type": "string"
+    },
+    "hostingPlanName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "HostingPlanSkuCapacity": {
+      "type": "int",
+      "defaultValue": 1
+    },
+    "HostingPlanSkuName": {
+      "type": "string",
+      "defaultValue": "S1"
+    },
+    "EventReportingStorethroughput": {
+      "type": "string",
+      "defaultValue": "10000"
+    },
+    "EventStoreThroughput": {
+      "type": "string",
+      "defaultValue": "1000"
+    },
+    "runtime": {
+      "type": "string",
+      "defaultValue": "dotnet",
+      "allowedValues": [
+        "node",
+        "dotnet",
+        "java"
+      ]
+    }
+  },
+  "variables": {
+    "stgaccntPrefix": "raetgdprtbl",
+    "dbPrefix": "raetgdprhas",
+    "storageAccounts_name": "[concat(variables('stgaccntPrefix'),parameters('env'))]",
+    "databaseAccounts_name": "[concat(variables('dbPrefix'),parameters('env'))]",
+    "storageAccountId": "[concat(resourceGroup().id,'/providers/Microsoft.Storage/storageAccounts/', variables('storageAccounts_name'))]",
+    "webSiteName": "[concat('raetgdpr-eventreporting-',parameters('env'))]",
+    "BlobContainerName": "[concat('gdpr-',parameters('env'),'-has-reportingcontainer')]",
+    "InitialLoadBlobContainerName": "[concat('gdpr-',parameters('env'),'-has-initial-load')]",
+    "GenerateReportQueueStorageName": "report-file-queue",
+    "CosmosDBReportingDatabaseName": "EAReportingStore",
+    "CosmosDBReportingContainer": "EAAgregates",
+    "CosmosDBEventDatabaseName": "EAEventStore",
+    "CosmosDBEventContainer": "EAEvents",
+    "CosmosDBHangFireDatabaseName": "HangFireDB",
+    "CosmosDBHangFireContainer": "HangFire",
+    "BlobMaxLimit": "100",
+    "cosmosDbAccountId": "[concat(resourceGroup().id,'/providers/Microsoft.DocumentDb/databaseAccounts/',variables('databaseAccounts_name'))]",
+    "eventGridTopicName": "[concat('EffectiveAuthorizationEventTriggered',parameters('env'))]",
+    "eventGridSubscriptionUrl": "[concat('https://effectiveauthorizationeventtriggered',parameters('env'),'.westeurope-1.eventgrid.azure.net/api/events')]",
+    "appInsightsServiceName": "[concat('raethasgdprappinsight',parameters('env'))]",
+    "functionAppName": "[concat('raethasgdprfunctionapp',parameters('env'))]",
+    "functionWorkerRuntime": "[parameters('runtime')]",
+    "PingFederate.Jwks.Url": "https://identity.raettest.com/ext/jwks",
+    "PingFederate.Jwks.SigningKey": "SD-T-IAMWEB08.raet.local",
+    "AdalConfigurtaion.Audience": "https://youforceonedev.onmicrosoft.com/youforceone-api",
+    "AdalConfigurtaion.ClientId": "5cc2c606-a3e6-4e46-9bdc-b07c231374d2",
+    "AdalConfigurtaion.ClientSecret": "Hru1:^m+UVAp{QvR8|FrOZfdRy",
+    "AdalConfigurtaion.Tenant": "youforceonedev.onmicrosoft.com",
+    "AdalConfigurtaion.AdInstance": "https://login.microsoftonline.com",
+    "Ums.umsUrl": "https://yfo-greyjoy-dev-ums.azurewebsites.net/api/v2.0"
+  },
+  "resources": [
+    {
+      "apiVersion": "2015-08-01",
+      "type": "Microsoft.Web/serverfarms",
+      "name": "[parameters('hostingPlanName')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "[parameters('HostingPlanSkuName')]",
+        "capacity": "[parameters('HostingPlanSkuCapacity')]"
+      },
+      "properties": {
+        "perSiteScaling": true,
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "virtualNetworkRules": [],
+          "ipRules": [],
+          "defaultAction": "Allow"
+        },
+        "supportsHttpsTrafficOnly": false,
+        "encryption": {
+          "services": {
+            "file": {
+              "enabled": true
+            },
+            "blob": {
+              "enabled": true
+            }
+          },
+          "keySource": "Microsoft.Storage"
+        }
+      },
+      "tags": {
+        "displayName": "HostingPlan",
+        "AppID": "HAS",
+        "CostCenter.Id": "571",
+        "CostCenter.Name": "CS Cloud Ops"
+      },
+      "kind": "Storage"
+    },
+    {
+      "name": "[variables('storageAccounts_name')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "[concat('HasStorageAccount',parameters('env'))]"
+      },
+      "properties": {
+        "accountType": "Standard_LRS"
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices",
+      "apiVersion": "2019-04-01",
+      "name": "[concat(variables('storageAccounts_name'),'/default')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccounts_name'))]"
+      ],
+      "properties": {
+        "cors": {
+          "corsRules": []
+        },
+        "deleteRetentionPolicy": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2019-04-01",
+      "name": "[concat(variables('storageAccounts_name'), '/default/azure-webjobs-hosts')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/blobServices', variables('storageAccounts_name'), 'default')]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccounts_name'))]"
+      ],
+      "properties": {
+        "publicAccess": "None"
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2019-04-01",
+      "name": "[concat(variables('storageAccounts_name'), '/default/azure-webjobs-secrets')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/blobServices', variables('storageAccounts_name'), 'default')]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccounts_name'))]"
+      ],
+      "properties": {
+        "publicAccess": "None"
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2019-04-01",
+      "name": "[concat(variables('storageAccounts_name'), '/default/gdpr-',parameters('env'),'-has-reportingcontainer')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/blobServices', variables('storageAccounts_name'), 'default')]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccounts_name'))]"
+      ],
+      "properties": {
+        "publicAccess": "None"
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2019-04-01",
+      "name": "[concat(variables('storageAccounts_name'), '/default/gdpr-',parameters('env'),'-log-container')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/blobServices', variables('storageAccounts_name'), 'default')]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccounts_name'))]"
+      ],
+      "properties": {
+        "publicAccess": "None"
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "apiVersion": "2015-04-08",
+      "name": "[variables('databaseAccounts_name')]",
+      "location": "West Europe",
+      "tags": {
+        "defaultExperience": "DocumentDB",
+        "AppID": "HAS",
+        "CostCenter.Id": "571",
+        "CostCenter.Name": "CS Cloud Ops"
+      },
+      "kind": "GlobalDocumentDB",
+      "properties": {
+        "enableAutomaticFailover": false,
+        "enableMultipleWriteLocations": false,
+        "isVirtualNetworkFilterEnabled": false,
+        "virtualNetworkRules": [],
+        "databaseAccountOfferType": "Standard",
+        "consistencyPolicy": {
+          "defaultConsistencyLevel": "Session",
+          "maxIntervalInSeconds": 5,
+          "maxStalenessPrefix": 100
+        },
+        "locations": [
+          {
+            "locationName": "West Europe",
+            "provisioningState": "Succeeded",
+            "failoverPriority": 0,
+            "isZoneRedundant": false
+          }
+        ],
+        "capabilities": []
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/apis/databases",
+      "name": "[concat(variables('databaseAccounts_name'), '/sql/', variables('CosmosDBReportingDatabaseName'))]",
+      "apiVersion": "2015-04-08",
+      "dependsOn": [ "[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('databaseAccounts_name'))]" ],
+      "properties": {
+        "resource": {
+          "id": "[variables('CosmosDBReportingDatabaseName')]"
+        },
+        "options": {
+          "throughput": "[parameters('EventReportingStorethroughput')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDb/databaseAccounts/apis/databases/containers",
+      "name": "[concat(variables('databaseAccounts_name'), '/sql/', variables('CosmosDBReportingDatabaseName'), '/', variables('CosmosDBReportingContainer'))]",
+      "apiVersion": "2015-04-08",
+      "dependsOn": [ "[resourceId('Microsoft.DocumentDB/databaseAccounts/apis/databases', variables('databaseAccounts_name'), 'sql', variables('CosmosDBReportingDatabaseName'))]" ],
+      "properties": {
+        "resource": {
+          "id": "[variables('CosmosDBReportingContainer')]",
+          "partitionKey": {
+            "paths": [
+              "/TenantId"
+            ],
+            "kind": "Hash"
+          },
+          "indexingPolicy": {
+            "indexingMode": "consistent",
+            "includedPaths": [
+              {
+                "path": "/*",
+                "indexes": [
+                  {
+                    "kind": "Range",
+                    "dataType": "number",
+                    "precision": -1
+                  },
+                  {
+                    "kind": "Range",
+                    "dataType": "string",
+                    "precision": -1
+                  }
+                ]
+              }
+            ],
+            "excludedPaths": [
+              {
+                "path": "/\"_etag\"/?"
+              }
+            ]
+          }
+        }
+      }
+    },
+
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/apis/databases",
+      "name": "[concat(variables('databaseAccounts_name'), '/sql/', variables('CosmosDBEventDatabaseName'))]",
+      "apiVersion": "2015-04-08",
+      "dependsOn": [ "[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('databaseAccounts_name'))]" ],
+      "properties": {
+        "resource": {
+          "id": "[variables('CosmosDBEventDatabaseName')]"
+        },
+        "options": {
+          "throughput": "[parameters('EventStorethroughput')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDb/databaseAccounts/apis/databases/containers",
+      "name": "[concat(variables('databaseAccounts_name'), '/sql/', variables('CosmosDBEventDatabaseName'), '/', variables('CosmosDBEventContainer'))]",
+      "apiVersion": "2015-04-08",
+      "dependsOn": [ "[resourceId('Microsoft.DocumentDB/databaseAccounts/apis/databases', variables('databaseAccounts_name'), 'sql', variables('CosmosDBEventDatabaseName'))]" ],
+      "properties": {
+        "resource": {
+          "id": "[variables('CosmosDBEventContainer')]",
+          "partitionKey": {
+            "paths": [
+              "/_partitionKey"
+            ],
+            "kind": "Hash"
+          },
+          "indexingPolicy": {
+            "indexingMode": "consistent",
+            "includedPaths": [
+              {
+                "path": "/*",
+                "indexes": [
+                  {
+                    "kind": "Range",
+                    "dataType": "number",
+                    "precision": -1
+                  },
+                  {
+                    "kind": "Range",
+                    "dataType": "string",
+                    "precision": -1
+                  },
+                  {
+                    "kind": "Spatial",
+                    "dataType": "Point"
+                  }
+                ]
+              }
+            ],
+            "excludedPaths": []
+          }
+        }
+      }
+    },
+
+    {
+      "apiVersion": "2016-08-01",
+      "type": "Microsoft.Web/sites",
+      "name": "[variables('functionAppName')]",
+      "location": "West Europe",
+      "kind": "functionapp",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', parameters('hostingPlanName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccounts_name'))]"
+      ],
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('hostingPlanName'))]",
+        "siteConfig": {
+          "appSettings": [
+            {
+              "name": "AzureWebJobsDashboard",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccounts_name'), ';AccountKey=', listKeys(variables('storageAccountid'),'2015-05-01-preview').key1)]"
+            },
+            {
+              "name": "AzureWebJobsStorage",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccounts_name'), ';AccountKey=', listKeys(variables('storageAccountid'),'2015-05-01-preview').key1)]"
+            },
+            {
+              "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccounts_name'), ';AccountKey=', listKeys(variables('storageAccountid'),'2015-05-01-preview').key1)]"
+            },
+            {
+              "name": "WEBSITE_CONTENTSHARE",
+              "value": "[toLower(variables('functionAppName'))]"
+            },
+            {
+              "name": "FUNCTIONS_EXTENSION_VERSION",
+              "value": "~3"
+            },
+            {
+              "name": "WEBSITE_NODE_DEFAULT_VERSION",
+              "value": "8.11.1"
+            },
+            {
+              "name": "FUNCTIONS_WORKER_RUNTIME",
+              "value": "[variables('functionWorkerRuntime')]"
+            },
+            {
+              "name": "CosmosReadDb:AuthKey",
+              "value": "[concat(listKeys(variables('cosmosDbAccountId'),'2015-04-08').primaryMasterKey)]"
+            },
+            {
+              "name": "CosmosReadDb:Collection",
+              "value": "[variables('CosmosDBEventContainer')]"
+            },
+            {
+              "name": "CosmosReadDb:Database",
+              "value": "[variables('CosmosDBEventDatabaseName')]"
+            },
+            {
+              "name": "CosmosReadDb:Endpoint",
+              "value": "[reference(concat('Microsoft.DocumentDb/databaseAccounts/', variables('databaseAccounts_name'))).documentEndpoint]"
+            },
+            {
+              "name": "CosmosWriteDb:AuthKey",
+              "value": "[concat(listKeys(variables('cosmosDbAccountId'),'2015-04-08').primaryMasterKey)]"
+            },
+            {
+              "name": "CosmosWriteDb:Collection",
+              "value": "[variables('CosmosDBReportingContainer')]"
+            },
+            {
+              "name": "CosmosWriteDb:Database",
+              "value": "[variables('CosmosDBReportingDatabaseName')]"
+            },
+            {
+              "name": "CosmosWriteDb:Endpoint",
+              "value": "[reference(concat('Microsoft.DocumentDb/databaseAccounts/', variables('databaseAccounts_name'))).documentEndpoint]"
+            },
+            {
+              "name": "TableStorageSettings:ConnectionString",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccounts_name'), ';AccountKey=', listKeys(variables('storageAccountid'),'2015-05-01-preview').key1)]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "microsoft.insights/components",
+      "kind": "other",
+      "name": "[variables('appInsightsServiceName')]",
+      "apiVersion": "2014-04-01",
+      "location": "[resourceGroup().location]",
+      "tags": {},
+      "scale": null,
+      "properties": {
+        "ApplicationId": "[variables('appInsightsServiceName')]"
+      },
+      "dependsOn": []
+    },
+    {
+      "name": "[variables('webSiteName')]",
+      "type": "Microsoft.Web/sites",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-08-01",
+      "dependsOn": [
+        "[concat('Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]"
+      ],
+      "tags": {
+        "displayName": "[variables('webSiteName')]"
+      },
+      "properties": {
+        "name": "[variables('webSiteName')]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms/',parameters('hostingPlanName'))]",
+        "siteConfig": {
+          "AlwaysOn": true
+        }
+      },
+      "resources": [
+        {
+          "name": "appsettings",
+          "type": "config",
+          "apiVersion": "2015-08-01",
+          "dependsOn": [
+            "[concat('Microsoft.Web/sites/', variables('webSiteName'))]"
+          ],
+          "tags": {
+            "displayName": "appsettings"
+          },
+          "properties": {
+            "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(concat('microsoft.insights/components/', variables('appInsightsServiceName'))).InstrumentationKey]",
+            "ApplicationInsightsAgent_EXTENSION_VERSION": "~2",
+            "APPINSIGHTS_PROFILERFEATURE_VERSION": "1.0.0",
+            "DiagnosticServices_EXTENSION_VERSION": "~3",
+            "SnapshotDebugger_EXTENSION_VERSION": "~1",
+            "XDT_MicrosoftApplicationInsights_BaseExtensions": "~1",
+            "XDT_MicrosoftApplicationInsights_Mode": "recommended",
+            "GenerateReportBlobStorageSettings:ContainerName": "[variables('BlobContainerName')]",
+            "CosmoDBSettings:Collection": "[variables('CosmosDBReportingContainer')]",
+            "CosmoDBSettings:Database": "[variables('CosmosDBReportingDatabaseName')]",
+            "CosmoDBSettings:AuthKey": "[concat(listKeys(variables('cosmosDbAccountId'),'2015-04-08').primaryMasterKey)]",
+            "CosmoDBSettings:Endpoint": "[reference(concat('Microsoft.DocumentDb/databaseAccounts/', variables('databaseAccounts_name'))).documentEndpoint]",
+            "CosmosReadDb:Collection": "[variables('CosmosDBEventContainer')]",
+            "CosmosReadDb:Database": "[variables('CosmosDBEventDatabaseName')]",
+            "CosmosReadDb:AuthKey": "[concat(listKeys(variables('cosmosDbAccountId'),'2015-04-08').primaryMasterKey)]",
+            "CosmosReadDb:Endpoint": "[reference(concat('Microsoft.DocumentDb/databaseAccounts/', variables('databaseAccounts_name'))).documentEndpoint]",
+            "GenerateReportBlobStorageSettings:MaxDataLimitForBlob": "[variables('BlobMaxLimit')]",
+            "CosmosHangFireDb:Database": "[variables('CosmosDBHangFireDatabaseName')]",
+            "CosmosHangFireDb:Collection": "[variables('CosmosDBHangFireContainer')]",
+            "CosmosHangFireDb:AuthKey": "[concat(listKeys(variables('cosmosDbAccountId'),'2015-04-08').primaryMasterKey)]",
+            "CosmosHangFireDb:Endpoint": "[reference(concat('Microsoft.DocumentDb/databaseAccounts/', variables('databaseAccounts_name'))).documentEndpoint]",
+            "GenerateReportBlobStorageSettings:ConnectionString": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccounts_name'), ';AccountKey=', listKeys(variables('storageAccountid'),'2015-05-01-preview').key1)]",
+            "TableStorageSettings:ConnectionString": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccounts_name'), ';AccountKey=', listKeys(variables('storageAccountid'),'2015-05-01-preview').key1)]",
+            "StorageConnection": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccounts_name'), ';AccountKey=', listKeys(variables('storageAccountid'),'2015-05-01-preview').key1)]",
+            "InitialLoadBlobStorageSettings:ConnectionString": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccounts_name'), ';AccountKey=', listKeys(variables('storageAccountid'),'2015-05-01-preview').key1)]",
+            "InitialLoadBlobStorageSettings:ContainerName": "[variables('InitialLoadBlobContainerName')]",
+            "InitialLoadBlobStorageSettings:MaxDataLimitForBlob": "[variables('BlobMaxLimit')]",
+            "GenerateReportQueueStorageSettings:ConnectionString": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccounts_name'), ';AccountKey=', listKeys(variables('storageAccountid'),'2015-05-01-preview').key1)]",
+            "GenerateReportQueueStorageSettings:ContainerName": "[variables('GenerateReportQueueStorageName')]",
+            "PingFederate:Jwks.Url": "[variables('PingFederate.Jwks.Url')]",
+            "PingFederate:Jwks.SigningKey": "[variables('PingFederate.Jwks.SigningKey')]",
+            "AdalConfigurtaion:Audience": "[variables('AdalConfigurtaion.Audience')]",
+            "AdalConfigurtaion:ClientId": "[variables('AdalConfigurtaion.ClientId')]",
+            "AdalConfigurtaion:ClientSecret": "[variables('AdalConfigurtaion.ClientSecret')]",
+            "AdalConfigurtaion:Tenant": "[variables('AdalConfigurtaion.Tenant')]",
+            "AdalConfigurtaion:AdInstance": "[variables('AdalConfigurtaion.AdInstance')]",
+            "Ums:umsUrl": "[variables('Ums.umsUrl')]"
+
+          }
+        }
+      ]
+    }
+
+  ],
+  "outputs": {}
+}

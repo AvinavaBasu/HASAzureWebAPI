@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <AzureFunctionsVersion>v3</AzureFunctionsVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.0.0" />
+    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.EventGrid" Version="2.1.0" />
+    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.Storage" Version="3.0.10" />
+    <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Raet.UM.HAS.Core.Application\Raet.UM.HAS.Core.Application.csproj" />
+    <ProjectReference Include="..\..\Core\Raet.UM.HAS.Core.Reporting\Raet.UM.HAS.Core.Reporting.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Raet.UM.HAS.Infrastructure.EventStorage.CosmosDB\Raet.UM.HAS.Infrastructure.Storage.CosmosDB.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Raet.UM.HAS.Infrastructure.Storage.Table\Raet.UM.HAS.Infrastructure.Storage.Table.csproj" />
+    <ProjectReference Include="..\..\Reat.UM.HAS.Core.GenerateReport\Reat.UM.HAS.Core.GenerateReport.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="host.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="local.settings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>
+    <None Update="Template\EventGridSubscriptionARMTemplate.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Template\RaetHasGdprFunctionARMTemplate.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <SonarQubeSetting Include="sonar.coverage.exclusions">
+      <Value>**/Startup.cs,**/DependencyInjection.cs</Value>
+    </SonarQubeSetting>
+  </ItemGroup>
+  
+</Project>

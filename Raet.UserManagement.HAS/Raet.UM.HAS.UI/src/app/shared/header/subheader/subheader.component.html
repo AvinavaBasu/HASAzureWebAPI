@@ -1,0 +1,10 @@
+<ng-container *ngIf="headerTemplate">
+    <header class="sub-header__header" attr.data-raet-id="CardHeader">
+      <h1 class="sub-header__title" attr.data-raet-id="CardTitle">
+        <ng-container *ngTemplateOutlet="headerTemplate">
+        </ng-container>
+      </h1>
+      <ng-container *ngTemplateOutlet="actionTemplate">
+        </ng-container>
+    </header>
+  </ng-container>

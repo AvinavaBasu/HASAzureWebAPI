@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp2.0</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="7.0.1" />
+    <PackageReference Include="Microsoft.Azure.DocumentDB.Core" Version="2.7.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="2.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="2.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.1.1" />
+    <PackageReference Include="MongoDB.Driver" Version="2.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Raet.UM.HAS.Core.Application\Raet.UM.HAS.Core.Application.csproj" />
+    <ProjectReference Include="..\..\Core\Raet.UM.HAS.Core.Domain\Raet.UM.HAS.Core.Domain.csproj" />
+    <ProjectReference Include="..\Raet.UM.HAS.Infrastructure.Storage.Models\Raet.UM.HAS.Infrastructure.Storage.Models.csproj" />
+  </ItemGroup>
+
+</Project>

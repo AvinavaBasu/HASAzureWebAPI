@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- Exclude the project from analysis -->
+    <SonarQubeExclude>true</SonarQubeExclude>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.0.0-preview7.19362.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Raet.UM.HAS.Core.Application\Raet.UM.HAS.Core.Application.csproj" />
+    <ProjectReference Include="..\..\Core\Raet.UM.HAS.Core.Domain\Raet.UM.HAS.Core.Domain.csproj" />
+    <ProjectReference Include="..\..\Core\Raet.UM.HAS.Core.Reporting\Raet.UM.HAS.Core.Reporting.csproj" />
+    <ProjectReference Include="..\..\Crosscutting\Raet.UM.HAS.Crosscutting.EventBus\Raet.UM.HAS.Crosscutting.EventBus.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Raet.UM.HAS.Infrastructure.EventStorage.CosmosDB\Raet.UM.HAS.Infrastructure.Storage.CosmosDB.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Raet.UM.HAS.Infrastructure.Http\Raet.UM.HAS.Infrastructure.Http.csproj" />
+  </ItemGroup>
+
+</Project>

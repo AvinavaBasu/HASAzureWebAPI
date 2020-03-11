@@ -1,0 +1,18 @@
+<has-subheader [headerTemplate]="titleTemplate" [actionTemplate]="actionTemplate">
+    <ng-template #titleTemplate>
+        HAS reports
+    </ng-template>
+    <ng-template #actionTemplate>
+        <zoom-button raetId="largeButton" type="button" size="large" (actionEvent)="onClickCreateReport()">
+            Create report
+        </zoom-button>
+    </ng-template>
+</has-subheader>
+
+<zoom-table raetId="demo1" [dataSource]="reportsDataSource" [displayedColumns]="displayedColumns"
+    *ngIf="reports" (clickRow)="handleClickRow($event)">
+
+</zoom-table>
+<zoom-table-empty raetId="demoEmpty" *ngIf="isInitialised && !reports">
+    There aren't any available reports to download at the moment. You can create a new report here.
+</zoom-table-empty>

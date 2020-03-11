@@ -1,0 +1,25 @@
+@import '~@zoomui/basics/src/lib/sass/generic/fonts';
+@import '~@zoomui/basics/src/lib/sass/tools/_functions';
+@import '~@zoomui/basics/src/lib/sass/tools/_mixins';
+@import '~@zoomui/basics/src/lib/sass/settings/_fonts';
+@import '~@zoomui/basics/src/lib/sass/settings/_colors';
+@import '~@zoomui/basics/src/lib/sass/objects/form-field-layout';
+@import '~@zoomui/basics/src/lib/sass/common';
+
+.grid{
+    margin-left: sp(2);
+}
+.zoom-form-label{
+    &__text{
+        font-family: $font-main;
+    }
+}
+.zoom-radio{
+    &__option-text{
+        span{
+           font-weight: $font-thin; 
+           font-size: ms(-1);
+           color: $color-dusk;
+        }
+    }
+}

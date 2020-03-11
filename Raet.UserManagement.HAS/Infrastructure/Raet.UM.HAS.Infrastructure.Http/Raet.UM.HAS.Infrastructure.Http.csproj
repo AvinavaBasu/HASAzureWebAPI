@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp2.0</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Azure.EventGrid" Version="1.3.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="RestSharp" Version="106.6.10" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.2.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Raet.UM.HAS.Core.Domain\Raet.UM.HAS.Core.Domain.csproj" />
+    <ProjectReference Include="..\..\Core\Raet.UM.HAS.Core.Reporting\Raet.UM.HAS.Core.Reporting.csproj" />
+  </ItemGroup>
+
+</Project>

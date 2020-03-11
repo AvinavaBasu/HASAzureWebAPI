@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp2.0</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MediatR" Version="5.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="2.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Crosscutting\Raet.UM.HAS.Crosscutting.EventBus\Raet.UM.HAS.Crosscutting.EventBus.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Raet.UM.HAS.Infrastructure.Storage.Table\Raet.UM.HAS.Infrastructure.Storage.Table.csproj" />
+    <ProjectReference Include="..\Raet.UM.HAS.Core.Domain\Raet.UM.HAS.Core.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

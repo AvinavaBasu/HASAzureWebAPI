@@ -1,0 +1,21 @@
+<zoom-page-template>
+    <ng-container zoomHeader>
+        <zoom-header raetId="zoomHeader">
+            <span class="platform-name" platformName *ngIf="!hideBack"> 
+                    <img (click)="goToPreviuosState()" class="company-logo" src="assets/img/back-Icon.svg" logo alt="Back" />
+                 </span>
+            <img class="company-logo" src="assets/img/logo-raet.png" logo alt="Raet" />
+            <span subBarText>Historical Access Reporting</span>
+        </zoom-header>
+    </ng-container>
+
+    <ng-container zoomMain>        
+        <router-outlet></router-outlet>
+    </ng-container>
+
+    <ng-container zoomFooter>
+        <zoom-footer raetId="zoomFooter">
+            Responsible disclosure policy
+        </zoom-footer>
+    </ng-container>
+</zoom-page-template>

@@ -1,0 +1,13 @@
+@import '~@zoomui/basics/src/lib/sass/tools/_functions';
+@import '~@zoomui/basics/src/lib/sass/settings/_fonts';
+
+.home {
+    &__information {
+        background-color: #fff8e8;
+        background-size: cover;
+        padding: sp(2) sp(2) sp(2) sp(2);
+        display: flex;
+        margin-top: sp(1); 
+        font-family: $font-main;
+    }
+}

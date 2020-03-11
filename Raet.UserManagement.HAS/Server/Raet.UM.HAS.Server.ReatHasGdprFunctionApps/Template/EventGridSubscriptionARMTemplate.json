@@ -1,0 +1,58 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "env": {
+      "type": "string"
+    },
+    "EventGridExtensionKey": {
+      "type": "string",
+      "defaultValue": "$(eventgridextensionKey)"
+    }
+  },
+
+  "variables": {
+    "eventGridTopicName": "[concat('EffectiveAuthorizationEventTriggered',parameters('env'))]",
+    "eventGridSubscriptionName": "[concat('triggerdataenrichmentfunction',parameters('env'))]",
+    "functionName": "DataEnrichmentFunction",
+    "functionAppName": "[concat('raethasgdprfunctionapp',parameters('env'))]",
+    "webHookUrl": "[concat('https://',variables('functionAppName'),'.azurewebsites.net/runtime/webhooks/EventGrid?functionName=',variables('functionName'),'&code=',parameters('EventGridExtensionKey'))]"
+  },
+
+  "resources": [
+    {
+      "name": "[variables('eventGridTopicName')]",
+      "type": "Microsoft.EventGrid/topics",
+      "location": "westeurope",
+      "apiVersion": "2018-01-01"
+    },
+    {
+      "apiVersion": "2018-01-01",
+      "dependsOn": [
+        "[variables('eventGridTopicName')]"
+      ],
+      "location": "westeurope",
+      "name": "[concat(variables('eventGridTopicName'), '/Microsoft.EventGrid/',variables('eventGridSubscriptionName'))]",
+      "properties": {
+        "destination": {
+          "endpointType": "WebHook",
+          "properties": {
+            "endpointUrl": "[variables('webHookUrl')]"
+          }
+        },
+        "filter": {
+          "includedEventTypes": [
+            "All"
+          ]
+        }
+      },
+      "type": "Microsoft.EventGrid/topics/providers/eventSubscriptions"
+    }
+  ],
+  "outputs": {
+    "return": {
+      "type": "string",
+      "value": "[variables('webHookUrl')]"
+    }
+  }
+}

@@ -1,0 +1,67 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <SignAssembly>false</SignAssembly>
+    <UserSecretsId>1d55a786-e0f8-4a69-a907-cedfa5ae1bd6</UserSecretsId>
+    <ApplicationInsightsResourceId>/subscriptions/1bfce26d-ce7a-4197-a184-68e1289631b7/resourcegroups/we-d-rsg-has/providers/microsoft.insights/components/raetgdpr-eventreporting-dev</ApplicationInsightsResourceId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Connected Services\Application Insights\ConnectedService.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Hangfire" Version="1.7.8" />
+    <PackageReference Include="Hangfire.AzureDocumentDB" Version="3.0.4" />
+    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.11.0" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.8.2" />
+    <PackageReference Include="Microsoft.ApplicationInsights.DependencyCollector" Version="2.11.2" />
+    <PackageReference Include="Microsoft.ApplicationInsights.PerfCounterCollector" Version="2.11.2" />
+    <PackageReference Include="Microsoft.ApplicationInsights.TraceListener" Version="2.11.0" />
+    <PackageReference Include="Microsoft.ApplicationInsights.Web" Version="2.11.2" />
+    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.2.8" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="2.2.4" />
+    <PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.11.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.0.0" />
+    <PackageReference Include="Raet.Identity.Middleware.NetCore.Jwt" Version="1.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="4.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+    <PackageReference Include="VismaRaet.API.AspNetCore.Authorization" Version="0.1.19311.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Raet.UM.HAS.Core.Reporting\Raet.UM.HAS.Core.Reporting.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Raet.UM.HAS.Infrastructure.EventStorage.CosmosDB\Raet.UM.HAS.Infrastructure.Storage.CosmosDB.csproj" />
+    <ProjectReference Include="..\..\Raet.UM.HAS.Core.InitialLoad\Raet.UM.HAS.Core.InitialLoad.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="Templates\ARMTemplateDeployment.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <SonarQubeSetting Include="sonar.coverage.exclusions">
+      <Value>**/Startup.cs,**/Program.cs,**/DependencyInjection.cs, **/FormFileSwaggerFilter.cs</Value>
+    </SonarQubeSetting>
+  </ItemGroup>
+
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services" />
+  </ItemGroup>
+
+</Project>

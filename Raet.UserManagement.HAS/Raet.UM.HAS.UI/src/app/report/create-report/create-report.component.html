@@ -1,0 +1,157 @@
+<has-subheader [headerTemplate]="titleTemplate" [actionTemplate]="actionTemplate">
+    <ng-template #titleTemplate>
+        Create HAS report
+    </ng-template>
+    <ng-template #actionTemplate>
+    </ng-template>
+</has-subheader>
+
+<has-formgroup>
+    Report properties
+</has-formgroup>
+<form zoomForm [formGroup]="createForm">
+    <div class="grid">
+        <div class="grid__row">
+            <div class="grid__cell--S">
+
+                <zoom-form-field raetId="reportName" label="Report name">
+                    <input zoomInput type="text" formControlName="reportName" zoomRequired>
+                    <ng-container errorRequiredMessage>
+                        This is a required field
+                    </ng-container>
+                </zoom-form-field>
+
+            </div>
+        </div>
+        <div class="grid__row">
+            <div class="grid__cell--S">
+
+                <zoom-form-field raetId="auditedApplication" label="Audited application" *ngIf="allAuditedApplications">
+                    <zoom-form-select-single zoomSelect zoomRequired formControlName="auditedApplication"
+                        *ngIf="allAuditedApplications" [dataSource]="allAuditedApplications">
+                        <ng-container select-label>Select an application</ng-container>
+                        <ng-container select-text>Select application</ng-container>
+                        <ng-container cancel-text>Cancel</ng-container>
+                    </zoom-form-select-single>
+                    <ng-container errorRequiredMessage>
+                        This is a required field
+                    </ng-container>
+                </zoom-form-field>
+                <zoom-form-field raetId="auditedApplicationDisabled" label="Audited application"
+                    *ngIf="!allAuditedApplications">
+                    <input zoomInput type="text" placeholder="Select an application" zoomDisabled zoomRequired>
+                </zoom-form-field>
+
+            </div>
+        </div>
+        <div class="grid__row">
+            <div class="grid__cell--S">
+                <zoom-form-field raetId="multipleSelectPermissions" label="Permissions" *ngIf="!disablePermission">
+                    <zoom-form-select-multiple raetId="ttttt" zoomSelect zoomRequired formControlName="multipleSelectPermissions"
+                        [dataSource]="allPermissions" selectAllText="Select all" multipleSelectionText="Show Multiple">
+                        <ng-container select-label>Select permissions</ng-container>
+                        <ng-container select-text>Select permissions </ng-container>
+                        <ng-container cancel-text>Done</ng-container>
+                    </zoom-form-select-multiple>
+                    <ng-container errorRequiredMessage>
+                        This is a required field
+                    </ng-container>
+                </zoom-form-field>
+                <zoom-form-field raetId="multiplePermissionsDisabled" label="Permissions" *ngIf="disablePermission">
+                    <input zoomInput type="text" placeholder="Select permissions" zoomDisabled zoomRequired>
+                </zoom-form-field>
+            </div>
+        </div>
+        <div class="grid__row">
+            <div class="grid__cell--M">
+                <zoom-form-field raetId="reportType" label="Report type" *ngIf="isPermissionSelected">
+                    <zoom-form-radio-group raetId="reportTypeRadio" formControlName="reportType">
+                        <zoom-option-radio value="Global">Global
+                            <br>
+                            <span class="">
+                                Shows all access users that are granted the permission(s) select below.
+                            </span>
+                        </zoom-option-radio>
+                        <zoom-option-radio value="Target">Target
+                            <br>
+                            <span>
+                                Shows permissions access users have over a specific target user.
+                            </span>
+                        </zoom-option-radio>
+                        <zoom-option-radio value="Source">Source
+                            <br />
+                            <span>Shows permissions granted to a specific access user over others.</span>
+                        </zoom-option-radio>
+                    </zoom-form-radio-group>
+                    <div class="grid__row">
+                        <div class="grid__cell--M">
+                          <zoom-form-field raetId="selectSingleUser" label={{userType}} *ngIf="isTargetOrSourceSelected">
+                            <zoom-form-select-single zoomSelect zoomRequired formControlName="userGroupSearch" [requestApi]=true (dispatchApi) ="searchUsers()"
+                              [dataSource]="users">
+                              <ng-container select-label>Select user</ng-container>
+                              <ng-container select-text >Select user</ng-container>
+                              <ng-container cancel-text>Cancel</ng-container>
+                            </zoom-form-select-single>
+                            <ng-container errorRequiredMessage>
+                                This is a required field
+                            </ng-container>
+                          </zoom-form-field>
+                        </div>
+                      </div>
+                    <ng-container errorRequiredMessage>
+                        This is a required field
+                    </ng-container>
+                </zoom-form-field>
+            </div>
+        </div>
+    </div>
+</form>
+<has-formgroup>
+    Date Range
+</has-formgroup>
+<form zoomForm [formGroup]="dateForm">
+    <div class="grid">
+        <div class="grid__row">
+            <div class="grid__cell--S">
+                <zoom-form-field raetId="MinValueInputDate" label="Start Date">
+                    <input zoomInput zoomRequired type="text" formControlName="startInputDate"
+                        zoomPlaceholder="mm/dd/yy" *zoomInputDate="minValue; event: click">
+                    <ng-container helpMessage>
+                        End Date should be greater than Start Date
+                    </ng-container>
+                    <ng-container errorRequiredMessage>
+                        This is a required field
+                    </ng-container>
+                    <zoom-form-field-message *ngIf="hasCustomValidationError(dateForm.controls.startInputDate)" type="error" raetId="ErrorCustomValidationMessage">
+                        Invalid Date Format
+                    </zoom-form-field-message>
+                </zoom-form-field>
+            </div>
+            <div class="grid__cell--S">
+                <zoom-form-field raetId="MaxValueInputDate" label="End Date" *ngIf="!disableEndDate">
+                    <input zoomInput zoomDisabled type="text" formControlName="endInputDate" zoomPlaceholder="mm/dd/yy"
+                        *zoomInputDate="maxValue; event: clickEnd">
+                </zoom-form-field>
+                <zoom-form-field raetId="MaxValueInputDate" label="End Date" *ngIf="disableEndDate">
+                    <input zoomInput zoomRequired type="text" formControlName="endInputDate" zoomPlaceholder="mm/dd/yy"
+                        *zoomInputDate="maxValue; event: clickEnd">
+
+                    <ng-container errorRequiredMessage>
+                        This is a required field
+                    </ng-container>
+                    <zoom-form-field-message *ngIf="hasCustomValidationError(dateForm.controls.endInputDate)" type="error" raetId="ErrorCustomValidationMessage">
+                        Invalid Date Format
+                    </zoom-form-field-message>
+                </zoom-form-field>
+            </div>
+        </div>
+        <div class="grid__row">
+            <div class="grid__cell--M">
+                <zoom-button raetId="largeButton" (actionEvent)="onClickCreateReport($event)"
+                    [isDisabled]="!dateForm.valid||!createForm.valid||disablePermission||!isPermissionSelected" type="button" size="large">
+                    Create report
+                </zoom-button>
+            </div>
+        </div>
+    </div>
+</form>

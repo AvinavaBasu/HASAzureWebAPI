@@ -1,0 +1,83 @@
+﻿{
+  "ValidGrantedEventData": {
+    "From": "2018-04-23T08:30:15.791Z",
+    "Action": "granted",
+    "EffectiveAuthorization": {
+      "TenantId": "TheBestPosibleTenant",
+      "User": {
+        "Context": "Youforce.Users",
+        "Id": "RU101080"
+      },
+      "Permission": {
+        "Id": "NewPermission",
+        "Application": "APP",
+        "Description": "NewLog Permissions"
+      },
+      "Target": {
+        "Context": "Youforce.Users",
+        "Id": "654321"
+      }
+    },
+    "DateCreated": "2018-09-14T13:26:43.2936215Z",
+    "id": "5f36d6a5-8d71-4d60-8cfe-52c6ce14dae5",
+    "_rid": "dTAUAIWoNwAdrQEAAAAAAA==",
+    "_self": "dbs/dTAUAA==/colls/dTAUAIWoNwA=/docs/dTAUAIWoNwAdrQEAAAAAAA==/",
+    "_etag": "\"120043d6-0000-0000-0000-5b9bb7130000\"",
+    "_attachments": "attachments/",
+    "_ts": 1536931603
+  },
+  "ValidRevokedEventData": {
+    "Until": "2018-08-23T08:30:15.791Z",
+    "Action": "revoked",
+    "EffectiveAuthorization": {
+      "TenantId": "TheBestPosibleTenant",
+      "User": {
+        "Context": "Youforce.Users",
+        "Id": "RU101080"
+      },
+      "Permission": {
+        "Id": "NewPermission",
+        "Application": "APP",
+        "Description": "NewLog Permissions"
+      },
+      "Target": {
+        "Context": "Youforce.Users",
+        "Id": "654321"
+      }
+    },
+    "DateCreated": "2018-09-14T13:26:43.2936215Z",
+    "id": "5f36d6a5-8d71-4d60-8cfe-52c6ce14dae5",
+    "_rid": "dTAUAIWoNwAdrQEAAAAAAA==",
+    "_self": "dbs/dTAUAA==/colls/dTAUAIWoNwA=/docs/dTAUAIWoNwAdrQEAAAAAAA==/",
+    "_etag": "\"120043d6-0000-0000-0000-5b9bb7130000\"",
+    "_attachments": "attachments/",
+    "_ts": 1536931603
+  },
+  "InvalidEventData": {
+    "From": "20199-84-31",
+    "Action": "granted",
+    "EffectiveAuthorization": {
+      "TenantId": "TheBestPosibleTenant",
+      "User": {
+        "Context": "Youforce.Users",
+        "Id": "RU101080"
+      },
+      "Permission": {
+        "Id": "NewPermission",
+        "Application": "APP",
+        "Description": "NewLog Permissions"
+      },
+      "Target": {
+        "Context": "Youforce.Users",
+        "Id": "654321"
+      }
+    },
+    "DateCreated": "2018-09-14T13:26:43.2936215Z",
+    "id": "5f36d6a5-8d71-4d60-8cfe-52c6ce14dae5",
+    "_rid": "dTAUAIWoNwAdrQEAAAAAAA==",
+    "_self": "dbs/dTAUAA==/colls/dTAUAIWoNwA=/docs/dTAUAIWoNwAdrQEAAAAAAA==/",
+    "_etag": "\"120043d6-0000-0000-0000-5b9bb7130000\"",
+    "_attachments": "attachments/",
+    "_ts": 1536931603
+  },
+}

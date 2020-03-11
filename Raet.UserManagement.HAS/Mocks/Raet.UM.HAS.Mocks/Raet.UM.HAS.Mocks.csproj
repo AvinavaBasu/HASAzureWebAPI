@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- Exclude the project from analysis -->
+    <SonarQubeExclude>true</SonarQubeExclude>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Configuration\Raet.UM.HAS.Configuration\Raet.UM.HAS.Configuration.csproj" />
+    <ProjectReference Include="..\..\Core\Raet.UM.HAS.Core.Domain\Raet.UM.HAS.Core.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

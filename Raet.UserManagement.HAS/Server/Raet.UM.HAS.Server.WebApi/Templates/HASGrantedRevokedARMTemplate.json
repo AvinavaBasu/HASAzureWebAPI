@@ -1,0 +1,285 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "env": {
+      "type": "string"
+    },
+    "hostingPlanName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "HostingPlanSkuCapacity": {
+      "type": "int",
+      "defaultValue": 1
+    },
+    "HostingPlanSkuName": {
+      "type": "string",
+      "defaultValue": "S1"
+    },
+    "EventStoreThroughput": {
+      "type": "string",
+      "defaultValue": "1000"
+    },
+    "EventGridExtensionKey": {
+      "type": "string",
+      "defaultValue": "$(eventgridextensionKey)"
+    }
+  },
+  "variables": {
+    "stgaccntPrefix": "raetgdprtbl",
+    "dbPrefix": "raetgdprhas",
+    "storageAccounts_name": "[concat(variables('stgaccntPrefix'),parameters('env'))]",
+    "databaseAccounts_name": "[concat(variables('dbPrefix'),parameters('env'))]",
+    "eventswebSiteName": "[concat('raetgdpr-',parameters('env'))]",
+    "CosmosDBEventDatabaseName": "EAEventStore",
+    "CosmosDBEventContainer": "EAEvents",
+    "cosmosDbAccountId": "[concat(resourceGroup().id,'/providers/Microsoft.DocumentDb/databaseAccounts/',variables('databaseAccounts_name'))]",
+    "eventGridTopicName": "[concat('EffectiveAuthorizationEventTriggered',parameters('env'))]",
+    "eventGridSubscriptionName": "[concat('triggerdataenrichmentfunction',parameters('env'))]",
+    "PingFederate.Jwks.Url": "https://identity.raettest.com/ext/jwks",
+    "PingFederate.Jwks.SigningKey": "SD-T-IAMWEB08.raet.local",
+    "appInsightsServiceName": "[concat('raethasgdprappinsight',parameters('env'))]",
+    "functionName": "DataEnrichmentFunction",
+    "functionAppName": "[concat('raethasgdprfunctionapp',parameters('env'))]",
+    "eventGridTopicId": "[concat(resourceGroup().id,'/providers/Microsoft.EventGrid/topics/',variables('eventGridTopicName'))]",
+    "webHookUrl": "[concat('https://',variables('functionAppName'),'.azurewebsites.net/runtime/webhooks/EventGrid?functionName=',variables('functionName'),'&code=',parameters('EventGridExtensionKey'))]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2015-08-01",
+      "type": "Microsoft.Web/serverfarms",
+      "name": "[parameters('hostingPlanName')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "[parameters('HostingPlanSkuName')]",
+        "capacity": "[parameters('HostingPlanSkuCapacity')]"
+      },
+      "properties": {
+        "perSiteScaling": true,
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "virtualNetworkRules": [],
+          "ipRules": [],
+          "defaultAction": "Allow"
+        },
+        "supportsHttpsTrafficOnly": false,
+        "encryption": {
+          "services": {
+            "file": {
+              "enabled": true
+            },
+            "blob": {
+              "enabled": true
+            }
+          },
+          "keySource": "Microsoft.Storage"
+        }
+      },
+      "tags": {
+        "displayName": "HostingPlan",
+        "AppID": "HAS",
+        "CostCenter.Id": "571",
+        "CostCenter.Name": "CS Cloud Ops"
+      },
+      "kind": "Storage"
+    },
+    {
+      "name": "[variables('storageAccounts_name')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "[concat('HasStorageAccount',parameters('env'))]"
+      },
+      "properties": {
+        "accountType": "Standard_LRS"
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "apiVersion": "2015-04-08",
+      "name": "[variables('databaseAccounts_name')]",
+      "location": "West Europe",
+      "tags": {
+        "defaultExperience": "DocumentDB",
+        "AppID": "HAS",
+        "CostCenter.Id": "571",
+        "CostCenter.Name": "CS Cloud Ops"
+      },
+      "kind": "GlobalDocumentDB",
+      "properties": {
+        "enableAutomaticFailover": false,
+        "enableMultipleWriteLocations": false,
+        "isVirtualNetworkFilterEnabled": false,
+        "virtualNetworkRules": [],
+        "databaseAccountOfferType": "Standard",
+        "consistencyPolicy": {
+          "defaultConsistencyLevel": "Session",
+          "maxIntervalInSeconds": 5,
+          "maxStalenessPrefix": 100
+        },
+        "locations": [
+          {
+            "locationName": "West Europe",
+            "provisioningState": "Succeeded",
+            "failoverPriority": 0,
+            "isZoneRedundant": false
+          }
+        ],
+        "capabilities": []
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/apis/databases",
+      "name": "[concat(variables('databaseAccounts_name'), '/sql/', variables('CosmosDBEventDatabaseName'))]",
+      "apiVersion": "2015-04-08",
+      "dependsOn": [ "[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('databaseAccounts_name'))]" ],
+      "properties": {
+        "resource": {
+          "id": "[variables('CosmosDBEventDatabaseName')]"
+        },
+        "options": {
+          "throughput": "[parameters('EventStorethroughput')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDb/databaseAccounts/apis/databases/containers",
+      "name": "[concat(variables('databaseAccounts_name'), '/sql/', variables('CosmosDBEventDatabaseName'), '/', variables('CosmosDBEventContainer'))]",
+      "apiVersion": "2015-04-08",
+      "dependsOn": [ "[resourceId('Microsoft.DocumentDB/databaseAccounts/apis/databases', variables('databaseAccounts_name'), 'sql', variables('CosmosDBEventDatabaseName'))]" ],
+      "properties": {
+        "resource": {
+          "id": "[variables('CosmosDBEventContainer')]",
+          "partitionKey": {
+            "paths": [
+              "/_partitionKey"
+            ],
+            "kind": "Hash"
+          },
+          "indexingPolicy": {
+            "indexingMode": "consistent",
+            "includedPaths": [
+              {
+                "path": "/*",
+                "indexes": [
+                  {
+                    "kind": "Range",
+                    "dataType": "number",
+                    "precision": -1
+                  },
+                  {
+                    "kind": "Range",
+                    "dataType": "string",
+                    "precision": -1
+                  },
+                  {
+                    "kind": "Spatial",
+                    "dataType": "Point"
+                  }
+                ]
+              }
+            ],
+            "excludedPaths": []
+          }
+        }
+      }
+    },
+    {
+      "type": "microsoft.insights/components",
+      "kind": "other",
+      "name": "[variables('appInsightsServiceName')]",
+      "apiVersion": "2014-04-01",
+      "location": "[resourceGroup().location]",
+      "tags": {},
+      "scale": null,
+      "properties": {
+        "ApplicationId": "[variables('appInsightsServiceName')]"
+      },
+      "dependsOn": []
+    },
+    {
+      "name": "[variables('eventswebSiteName')]",
+      "type": "Microsoft.Web/sites",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-08-01",
+      "dependsOn": [
+        "[concat('Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]"
+      ],
+      "tags": {
+        "displayName": "[variables('eventswebSiteName')]"
+      },
+      "properties": {
+        "name": "[variables('eventswebSiteName')]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms/',parameters('hostingPlanName'))]",
+        "siteConfig": {
+          "AlwaysOn": true
+        }
+      },
+      "resources": [
+        {
+          "name": "appsettings",
+          "type": "config",
+          "apiVersion": "2015-08-01",
+          "dependsOn": [
+            "[concat('Microsoft.Web/sites/', variables('eventswebSiteName'))]"
+          ],
+          "tags": {
+            "displayName": "appsettings"
+          },
+          "properties": {
+            "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(concat('microsoft.insights/components/', variables('appInsightsServiceName'))).InstrumentationKey]",
+            "ApplicationInsightsAgent_EXTENSION_VERSION": "~2",
+            "APPINSIGHTS_PROFILERFEATURE_VERSION": "1.0.0",
+            "DiagnosticServices_EXTENSION_VERSION": "~3",
+            "SnapshotDebugger_EXTENSION_VERSION": "~1",
+            "XDT_MicrosoftApplicationInsights_BaseExtensions": "~1",
+            "XDT_MicrosoftApplicationInsights_Mode": "recommended",
+            "APP_STARTUP_CONFIGURATION": "ReactiveAppStartup",
+            "ASPNETCORE_ENVIRONMENT": "[parameters('env')]",
+            "MobileAppsManagement_EXTENSION_VERSION": "latest",
+            "PingFederate:Jwks.EndPoint": "[variables('PingFederate.Jwks.Url')]",
+            "PingFederate:Jwks.KeyId": "[variables('PingFederate.Jwks.SigningKey')]",
+            "CosmoDBSettings:authKey": "[concat(listKeys(variables('cosmosDbAccountId'),'2015-04-08').primaryMasterKey)]",
+            "CosmoDBSettings:database": "[variables('CosmosDBEventDatabaseName')]",
+            "CosmoDBSettings:endpoint": "[reference(concat('Microsoft.DocumentDb/databaseAccounts/', variables('databaseAccounts_name'))).documentEndpoint]",
+            "CosmoDBSettings:collection": "[variables('CosmosDBEventContainer')]",
+            "EventGrid:TopicEndpoint": "[reference(concat('Microsoft.EventGrid/topics/', variables('eventGridTopicName'))).Endpoint]",
+            "EventGrid:SasKey": "[concat(listKeys(variables('eventGridTopicId'),'2018-01-01').key1)]"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "[variables('eventGridTopicName')]",
+      "type": "Microsoft.EventGrid/topics",
+      "location": "westeurope",
+      "apiVersion": "2018-01-01"
+    },
+    {
+      "name": "[concat(variables('eventGridTopicName'), '/Microsoft.EventGrid/',variables('eventGridSubscriptionName'))]",
+      "type": "Microsoft.EventGrid/topics/providers/eventSubscriptions",
+      "location": "westeurope",
+      "apiVersion": "2018-01-01",
+      "properties": {
+        "destination": {
+          "endpointType": "WebHook",
+          "properties": {
+            "endpointUrl": "[variables('webHookUrl')]"
+          }
+        },
+        "filter": {
+          "includedEventTypes": [
+            "All"
+          ]
+        }
+      },
+      "dependsOn": [
+        "[variables('eventGridTopicName')]"
+      ]
+    }
+  ],
+  "outputs": {}
+}

@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Raet.UM.HAS.Core.Reporting\Raet.UM.HAS.Core.Reporting.csproj" />
+    <ProjectReference Include="..\Server\Raet.UMS.HAS.Server.EventReportingStore.WebApi\Raet.UMS.HAS.Server.EventReportingStore.WebApi.csproj" />
+  </ItemGroup>
+
+</Project>

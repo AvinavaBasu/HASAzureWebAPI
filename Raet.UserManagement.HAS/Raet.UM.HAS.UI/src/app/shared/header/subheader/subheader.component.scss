@@ -1,0 +1,61 @@
+ @import '~@zoomui/basics/src/lib/sass/generic/fonts';
+@import '~@zoomui/basics/src/lib/sass/tools/_functions';
+@import '~@zoomui/basics/src/lib/sass/tools/_mixins';
+@import '~@zoomui/basics/src/lib/sass/settings/_fonts';
+@import '~@zoomui/basics/src/lib/sass/settings/_colors';
+
+.sub-header {
+
+  &__button {
+    background: none;
+    border: 0;
+    color: inherit;
+    line-height: normal;
+    overflow: visible;
+    padding: 0;
+    cursor: pointer;
+    outline: none;
+  }
+
+  &__button {
+    background: none;
+    border: 0;
+    color: inherit;
+    line-height: normal;
+    overflow: visible;
+    padding: 0;
+    cursor: pointer;
+    outline: none;
+  }
+
+  &__header {
+    padding: sp(1) sp(1) sp(1) sp(1);
+    display: flex;
+    justify-content: space-between;
+    background-color: $color-light-gray;
+    align-items: center;
+    min-height: 40px;
+  }
+
+  &__title {
+    color: $color-black;
+    font-family: $font-title;
+    font-weight: $font-bold;
+    font-size: ms(5) !important;
+    margin: 0;
+    
+
+    @include medium {
+      font-size: ms(2);
+    }
+
+    &:first-letter {
+      text-transform: uppercase;
+    }
+  }
+
+  &__icon-refresh {
+    width: sp(3);
+    height: sp(3);
+  }
+}

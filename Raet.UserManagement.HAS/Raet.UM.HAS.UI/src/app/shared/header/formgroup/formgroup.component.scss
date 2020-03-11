@@ -1,0 +1,18 @@
+@import '~@zoomui/basics/src/lib/sass/generic/fonts';
+@import '~@zoomui/basics/src/lib/sass/tools/_functions';
+@import '~@zoomui/basics/src/lib/sass/tools/_mixins';
+@import '~@zoomui/basics/src/lib/sass/settings/_fonts';
+@import '~@zoomui/basics/src/lib/sass/settings/_colors';
+
+.form-group{
+    padding: sp(1);
+    display: flex;
+    justify-content: space-between;
+    background-color: $color-platinum;
+    align-items: center;
+    color: $color-black;
+    font-family: $font-title;
+    font-weight: $font-normal;
+    margin-top: sp(1);
+    margin-bottom: sp(2);
+}
